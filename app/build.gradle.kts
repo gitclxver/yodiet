@@ -54,6 +54,7 @@ dependencies {
 
     // Hilt Core
     implementation("com.google.dagger:hilt-android:2.50")
+    implementation(libs.androidx.material3.android)
     ksp("com.google.dagger:hilt-android-compiler:2.50")
 
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
