@@ -25,15 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.navigation.NavController
+import com.yodiet.nav.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopNav(
-    onProfileClick: () -> Unit,
-    onNavigateToGoals: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToStats: () -> Unit
-) {
+fun TopNav(navController: NavController) {
     var showDropdown by remember { mutableStateOf(false) }
 
     TopAppBar(
@@ -44,7 +41,7 @@ fun TopNav(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Profile Button
-                IconButton(onClick = onProfileClick) {
+                IconButton(onClick = { navController.navigate(Routes.Profile) }) {
                     Icon(
                         Icons.Default.AccountCircle,
                         contentDescription = "Profile",
@@ -76,24 +73,31 @@ fun TopNav(
                         onDismissRequest = { showDropdown = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Goals") },
+                            text = { Text("Home") },
                             onClick = {
                                 showDropdown = false
-                                onNavigateToGoals()
+                                navController.navigate(Routes.Home)
                             }
                         )
+//                        DropdownMenuItem(
+//                            text = { Text("Goals") },
+//                            onClick = {
+//                                showDropdown = false
+//                                navController.navigate(Routes.Goals)
+//                            }
+//                        )
+//                        DropdownMenuItem(
+//                            text = { Text("Diet") },
+//                            onClick = {
+//                                showDropdown = false
+//                                navController.navigate(Routes.Diet)
+//                            }
+//                        )
                         DropdownMenuItem(
-                            text = { Text("Statistics") },
+                            text = { Text("Health") },
                             onClick = {
                                 showDropdown = false
-                                onNavigateToStats()
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Settings") },
-                            onClick = {
-                                showDropdown = false
-                                onNavigateToSettings()
+                                navController.navigate(Routes.Health)
                             }
                         )
                     }

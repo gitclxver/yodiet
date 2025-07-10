@@ -23,35 +23,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
-
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            val navController = rememberNavController()
-            NavHost(navController = navController, startDestination = "home") {
-                composable("home") {
-                    HomeScreen(
-                        onProfileClick = { navController.navigate("profile") },
-                        onMenuClick = { /* TODO: handle menu click */ }
-                    )
-                }
-                composable("profile") {
-                    ProfileScreen(onBack = { navController.popBackStack() })
-                }
-            }
-        }
-    }
-}
+import com.yodiet.ui.components.TopNav
 
 @Composable
 fun HomeScreen(
-    onProfileClick: () -> Unit = {},
-    onMenuClick: () -> Unit = {}
+    navController: NavController
 ) {
     Column(
         modifier = Modifier
@@ -59,45 +39,8 @@ fun HomeScreen(
             .verticalScroll(rememberScrollState())
             .background(Color.White)
     ) {
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, start = 24.dp, end = 24.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            IconButton(onClick = onProfileClick) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile",
-                    tint = Color.Black,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Meal Plan",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp,
-                    color = Color.Black
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu",
-                    tint = Color.Black,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-        }
+
+        TopNav(navController = navController)
 
         Spacer(modifier = Modifier.height(8.dp))
 

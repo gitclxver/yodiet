@@ -10,12 +10,15 @@ import com.yodiet.data.db.model.User
 import com.yodiet.data.db.model.Health
 import com.yodiet.data.db.model.HealthProgress
 import com.yodiet.data.db.dao.HealthDao
+//import com.yodiet.data.db.dao.MealDao
+//import com.yodiet.data.db.model.Meal
 
 @Database(
     entities = [
         User::class,
         Health::class,
-        HealthProgress::class
+        HealthProgress::class,
+        //Meal::class
     ],
     version = 1,
     exportSchema = false
@@ -25,7 +28,7 @@ abstract class AppDB : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun healthDao(): HealthDao
 //    abstract fun goalDao(): GoalDao
-//    abstract fun DietDao(): DietDao
+    //abstract fun mealDao(): MealDao
 
     companion object {
         @Volatile
@@ -38,7 +41,7 @@ abstract class AppDB : RoomDatabase() {
                     AppDB::class.java,
                     "app_db"
                 )
-                    .fallbackToDestructiveMigration() // Optional: handles version changes by clearing DB
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

@@ -14,7 +14,7 @@
         android:theme="@style/Theme.Yodiet"
         tools:targetApi="31">
         <activity
-            android:name=".YoDiet"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Yodiet">
             <intent-filter>

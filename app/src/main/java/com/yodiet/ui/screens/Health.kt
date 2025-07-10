@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
@@ -20,8 +22,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.yodiet.data.db.dao.HealthProgressWithGoal
 import com.yodiet.data.db.model.Health
+import com.yodiet.nav.Routes
 import com.yodiet.ui.components.TopNav
 import com.yodiet.ui.vmodels.HealthVM
 import java.text.SimpleDateFormat
@@ -30,10 +34,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthScreen(
-    onProfileClick: () -> Unit,
-    onNavigateToGoals: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    onNavigateToStats: () -> Unit,
+    navController: NavController,
     viewModel: HealthVM = hiltViewModel()
 ) {
     val healthData by viewModel.healthData.collectAsStateWithLifecycle(
@@ -56,12 +57,8 @@ fun HealthScreen(
     ) {
         // Top Navigation
         TopNav(
-            onProfileClick = onProfileClick,
-            onNavigateToGoals = onNavigateToGoals,
-            onNavigateToSettings = onNavigateToSettings,
-            onNavigateToStats = onNavigateToStats
+            navController = navController
         )
-
         if (isLoading) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -114,8 +111,18 @@ fun HealthScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    TextButton(onClick = onNavigateToGoals) {
-                                        Text("Add your first goal")
+                                    FloatingActionButton(
+                                        onClick = {
+                                            navController.navigate(Routes.Goals)
+                                        },
+                                        shape = CircleShape,
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = "Add your first goal",
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
                                     }
                                 }
                             }
