@@ -119,13 +119,10 @@ class HealthVM @Inject constructor(
         return calendar.time
     }
 
-    // Calculate progress percentage
     fun getProgressPercentage(current: Int, target: Int): Float {
         return if (target > 0) (current.toFloat() / target.toFloat()) * 100f else 0f
     }
 }
-
-// UI State data class
 data class HealthUiState(
     val dailyGoals: List<Health> = emptyList(),
     val weeklyProgress: List<HealthProgressWithGoal> = emptyList(),

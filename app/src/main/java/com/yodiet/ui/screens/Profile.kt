@@ -1,5 +1,9 @@
+package com.yodiet.ui.screens
+
+import com.yodiet.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -20,16 +24,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.yodiet.nav.Routes
 import com.yodiet.ui.components.EditProfileTopNav
+import com.yodiet.ui.vmodels.GoalViewModel
 import com.yodiet.ui.vmodels.ProfileVM
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    profileViewModel: ProfileVM = hiltViewModel()
+    profileViewModel: ProfileVM = hiltViewModel(),
+    goalViewModel: GoalViewModel = hiltViewModel()  // Add GoalVM as a parameter
 ) {
-    val currentUser by profileViewModel.currentUser.collectAsState()
+    val currentUser = profileViewModel.currentUser.value
+    val goals by goalViewModel.allGoals.collectAsState(initial = emptyList())
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    val totalGoals = goals.size
+    val completedGoals = goals.count { it.progress >= 1f }
+    val completionPercentage = if (totalGoals > 0) (completedGoals.toFloat() / totalGoals * 100).toInt() else 0
 
     Scaffold(
         topBar = {
@@ -91,26 +102,22 @@ fun ProfileScreen(
                 return@Column
             }
 
-            // Profile Picture Section
             Spacer(modifier = Modifier.height(32.dp))
 
             Box(
                 contentAlignment = Alignment.BottomEnd
             ) {
-//                Image(
-//                    painter = painterResource(R.drawable.profile_placeholder),
-//                    contentDescription = "Profile Picture",
-//                    modifier = Modifier
-//                        .size(150.dp)
-//                        .clip(CircleShape)
-//                        .background(MaterialTheme.colorScheme.surfaceVariant),
-//                    contentScale = ContentScale.Crop
-//                )
-
-                // Add photo/edit button could go here
+                Image(
+                    painter = painterResource(R.drawable.user_placeholder),
+                    contentDescription = "Profile Picture",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentScale = ContentScale.Crop
+                )
             }
 
-            // User Info Section
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
@@ -125,19 +132,31 @@ fun ProfileScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Stats Section (optional)
             Spacer(modifier = Modifier.height(32.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                ProfileStatItem("Goals", "12")  // Replace with actual data
-                ProfileStatItem("Progress", "75%")
-                ProfileStatItem("Streak", "5 days")
+                ProfileStatItem(
+                    label = "Goals",
+                    value = "$totalGoals",
+                    onClick = { navController.navigate(Routes.GoalsScreen) }
+                )
+
+                ProfileStatItem(
+                    label = "Progress",
+                    value = "$completionPercentage%",
+                    onClick = { navController.navigate(Routes.GoalsScreen) }
+                )
+
+                // Streak (placeholder for now)
+                ProfileStatItem(
+                    label = "Streak",
+                    value = "0 day",
+                )
             }
 
-            // Action Buttons
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
@@ -160,7 +179,6 @@ fun ProfileScreen(
         }
     }
 
-    // Logout Confirmation Dialog
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showLogoutDialog = false },
@@ -191,8 +209,17 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileStatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+private fun ProfileStatItem(
+    label: String,
+    value: String,
+    onClick: () -> Unit = {}
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(8.dp)
+    ) {
         Text(
             text = value,
             style = MaterialTheme.typography.headlineSmall,

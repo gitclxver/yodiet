@@ -8,6 +8,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,11 +27,10 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
-    var showLogoutConfirmationDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
     val currentTheme by ThemeManager.currentThemeState()
 
-    // Observe UI events from ViewModel
     LaunchedEffect(Unit) {
         settingsViewModel.uiEvents.collect { event ->
             when (event) {
@@ -78,7 +78,6 @@ fun SettingsScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Appearance Section
             SettingsSection(title = "Appearance") {
                 ThemeSelectionItem(
                     currentTheme = currentTheme,
@@ -90,33 +89,31 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Account Section
             SettingsSection(title = "Account") {
                 SettingsItem(
                     icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Sign Out",
-                    onClick = { showLogoutConfirmationDialog = true }
+                    onClick = { showLogoutDialog = true }
                 )
                 SettingsItem(
                     icon = Icons.Default.DeleteForever,
                     title = "Delete Account",
                     isDestructive = true,
-                    onClick = { showDeleteConfirmationDialog = true }
+                    onClick = { showDeleteDialog = true }
                 )
             }
         }
 
-        // Confirmation Dialogs
-        if (showDeleteConfirmationDialog) {
+        if (showDeleteDialog) {
             AlertDialog(
-                onDismissRequest = { showDeleteConfirmationDialog = false },
+                onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Delete Account") },
                 text = { Text("This will permanently delete your account and all data. Continue?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             settingsViewModel.deleteAccount()
-                            showDeleteConfirmationDialog = false
+                            showDeleteDialog = false
                         }
                     ) {
                         Text("Delete", color = MaterialTheme.colorScheme.error)
@@ -124,7 +121,7 @@ fun SettingsScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { showDeleteConfirmationDialog = false }
+                        onClick = { showDeleteDialog = false }
                     ) {
                         Text("Cancel")
                     }
@@ -132,16 +129,18 @@ fun SettingsScreen(
             )
         }
 
-        if (showLogoutConfirmationDialog) {
+        if (showLogoutDialog) {
             AlertDialog(
-                onDismissRequest = { showLogoutConfirmationDialog = false },
-                title = { Text("Sign Out") },
+                onDismissRequest = { showLogoutDialog = false },
+                title = { Text("Confirm Logout") },
                 text = { Text("Are you sure you want to sign out?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            settingsViewModel.signOut()
-                            showLogoutConfirmationDialog = false
+                            showLogoutDialog = false
+                            navController.navigate(Routes.LoginScreen) {
+                                popUpTo(Routes.ProfileScreen) { inclusive = true }
+                            }
                         }
                     ) {
                         Text("Sign Out")
@@ -149,7 +148,7 @@ fun SettingsScreen(
                 },
                 dismissButton = {
                     TextButton(
-                        onClick = { showLogoutConfirmationDialog = false }
+                        onClick = { showLogoutDialog = false }
                     ) {
                         Text("Cancel")
                     }
@@ -191,7 +190,7 @@ private fun ThemeSelectionItem(
                 )
             }
             if (value != themes.last().second) {
-                Divider(
+                HorizontalDivider(
                     modifier = Modifier.padding(start = 16.dp),
                     thickness = 0.5.dp,
                     color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)

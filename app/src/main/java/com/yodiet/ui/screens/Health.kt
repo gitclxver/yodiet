@@ -7,9 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.*
@@ -18,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,7 +43,6 @@ fun HealthScreen(
     // Show error if exists
     LaunchedEffect(error) {
         error?.let {
-            // Handle error display (snackbar, toast, etc.)
         }
     }
 
@@ -55,7 +51,7 @@ fun HealthScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Top Navigation
+
         TopNav(
             navController = navController
         )
@@ -73,7 +69,6 @@ fun HealthScreen(
                     .fillMaxSize()
                     .padding(16.dp)
             ) {
-                // Daily Goals Section (Scrollable)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -113,7 +108,7 @@ fun HealthScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     FloatingActionButton(
                                         onClick = {
-                                            navController.navigate(Routes.GoalsScreeen)
+                                            navController.navigate(Routes.GoalsScreen)
                                         },
                                         shape = CircleShape,
                                         containerColor = MaterialTheme.colorScheme.primary
@@ -145,7 +140,6 @@ fun HealthScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Weekly Progress Section (Fixed at bottom)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -248,7 +242,7 @@ fun HealthGoalCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Quick action buttons
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End

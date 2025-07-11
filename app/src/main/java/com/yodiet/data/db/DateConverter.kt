@@ -3,7 +3,6 @@ package com.yodiet.data.db
 import androidx.room.TypeConverter
 import java.util.Date
 
-// Date converter for Room database
 class DateConverter {
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? {

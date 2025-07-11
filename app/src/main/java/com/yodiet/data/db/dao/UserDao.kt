@@ -31,4 +31,28 @@ interface UserDao {
     @Query("SELECT * FROM users LIMIT 1")
     fun getCurrentUserFlow(): Flow<User?>
 
+    @Query("SELECT * FROM users WHERE email = :email LIMIT 1")
+    suspend fun getUserByEmail(email: String): User?
+
+    @Query("SELECT * FROM users WHERE email = :email AND first_name = :firstName LIMIT 1")
+    suspend fun validateUser(email: String, firstName: String): User?
+
+
+    @Query("SELECT * FROM users WHERE email = :emailOrUsername OR user_name = :emailOrUsername LIMIT 1")
+    suspend fun getUserByEmailOrUsername(emailOrUsername: String): User?
+
+    @Query("SELECT * FROM users WHERE user_name = :username LIMIT 1")
+    suspend fun getUserByUsername(username: String): User?
+
+    @Query("SELECT * FROM users WHERE email = :email AND password = :password LIMIT 1")
+    suspend fun validateUserCredentials(email: String, password: String): User?
+
+    @Query("SELECT * FROM users WHERE is_current = 1 LIMIT 1")
+    suspend fun getCurrentUser(): User?
+
+    @Query("UPDATE users SET is_current = 0")
+    suspend fun clearCurrentUser()
+
+    @Query("UPDATE users SET is_current = 1 WHERE id = :userId")
+    suspend fun setCurrentUser(userId: Long)
 }

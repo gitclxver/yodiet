@@ -1,6 +1,5 @@
 package com.yodiet
 
-import ProfileScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -78,7 +77,7 @@ fun YoDietApp() {
                 composable(Routes.HomeScreen) { HomeScreen(navController) }
                 composable(Routes.HealthScreen) { HealthScreen(navController) }
                 composable(Routes.ProfileScreen) { ProfileScreen(navController) }
-                composable(Routes.GoalsScreeen) {ProfileScreen(navController)}
+                composable(Routes.GoalsScreen) {GoalsScreen(navController)}
                 composable(Routes.DietScreen) {DietScreen(navController)}
                 composable(Routes.EditProfile) { EditProfileScreen(navController, profileVM) }
                 composable(Routes.SettingsScreen) { SettingsScreen(navController) }

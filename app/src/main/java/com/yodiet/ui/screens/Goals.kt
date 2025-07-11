@@ -1,14 +1,14 @@
 package com.yodiet.ui.screens
 
-package com.yodiet.ui.screens
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -18,203 +18,437 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.yodiet.data.db.model.Goal
-import com.yodiet.ui.vmodels.GoalVM
+import com.yodiet.ui.components.TopNav
+import com.yodiet.ui.vmodels.GoalViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoalsScreen(goalVM: GoalVM = viewModel()) {
-    var showAddEditDialog by remember { mutableStateOf(false) }
-    var editingGoal by remember { mutableStateOf<Goal?>(null) }
-    var showDeleteDialog by remember { mutableStateOf<Goal?>(null) }
+fun GoalsScreen(
+    navController: NavController,
+    viewModel: GoalViewModel = hiltViewModel()
+) {
+    val goals by viewModel.allGoals.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+    var showAddGoalDialog by remember { mutableStateOf(false) }
+    var showEditGoalDialog by remember { mutableStateOf<Goal?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Goals",
-                fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
-                color = Color.Black,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(top = 32.dp, bottom = 16.dp)
-            )
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+    Scaffold(
+        topBar = { TopNav(navController = navController) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddGoalDialog = true },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
-                items(goalVM.goals) { goal ->
-                    GoalCard(
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add new goal",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center
+    ) { paddingValues ->
+        if (goals.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No goals set yet.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(goals) { goal ->
+                    GoalItem(
                         goal = goal,
-                        onEdit = { editingGoal = goal; showAddEditDialog = true },
-                        onDelete = { showDeleteDialog = goal }
+                        onEditClick = { showEditGoalDialog = it },
+                        onDeleteClick = { viewModel.deleteGoal(it.id) }
                     )
                 }
             }
         }
-        FloatingActionButton(
-            onClick = { editingGoal = null; showAddEditDialog = true },
-            containerColor = Color(0xFF1976D2),
-            contentColor = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Add Goal")
-        }
     }
 
-    if (showAddEditDialog) {
-        AddEditGoalDialog(
-            initialGoal = editingGoal,
-            onDismiss = { showAddEditDialog = false },
-            onSave = { name, type, desc, current, target ->
-                if (editingGoal == null) {
-                    goalVM.addGoal(name, type, desc, current, target)
-                } else {
-                    goalVM.updateGoal(editingGoal!!.id, name, type, desc, current, target)
-                }
-                showAddEditDialog = false
-            }
+    if (showAddGoalDialog) {
+        AddGoalDialog(
+            onConfirm = { newGoal ->
+                viewModel.addGoal(newGoal)
+                showAddGoalDialog = false
+            },
+            onCancel = { showAddGoalDialog = false },
+            currentUserId = currentUser?.id ?: 0L
         )
     }
-    if (showDeleteDialog != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = null },
-            title = { Text("Delete Goal") },
-            text = { Text("Are you sure you want to delete this goal?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    goalVM.deleteGoal(showDeleteDialog!!.id)
-                    showDeleteDialog = null
-                }) { Text("Delete") }
+
+    showEditGoalDialog?.let { goalToEdit ->
+        EditGoalDialog(
+            goal = goalToEdit,
+            onConfirm = { updatedGoal ->
+                viewModel.updateGoal(updatedGoal)
+                showEditGoalDialog = null
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = null }) { Text("Cancel") }
-            }
+            onCancel = { showEditGoalDialog = null }
         )
     }
 }
 
 @Composable
-fun GoalCard(goal: Goal, onEdit: () -> Unit, onDelete: () -> Unit) {
+fun GoalItem(
+    goal: Goal,
+    onEditClick: (Goal) -> Unit,
+    onDeleteClick: (Goal) -> Unit
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = goal.progress,
+        animationSpec = tween(durationMillis = 1000), label = "progressAnimation"
+    )
+
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .background(Color.Transparent),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1976D2)),
-        elevation = CardDefaults.elevatedCardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF3F51B5))
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(goal.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text(goal.description, color = Color.White, fontSize = 14.sp, maxLines = 1)
                 Text(
-                    text = "${goal.currentValue} / ${goal.targetValue} | ${goal.type}",
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
-            }
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(end = 8.dp)) {
-                CircularProgressIndicator(
-                    progress = goal.progress,
-                    modifier = Modifier.size(48.dp),
-                    strokeWidth = 6.dp,
+                    text = goal.name,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = Color.White
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${(goal.progress * 100).toInt()}%",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    text = goal.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.7f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "${goal.currentValue.toInt()} / ${goal.targetValue.toInt()} ${goal.unit}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White
                 )
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(horizontalAlignment = Alignment.End) {
+                Row {
+                    IconButton(onClick = { onEditClick(goal) }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit goal",
+                            tint = Color.White
+                        )
+                    }
+                    IconButton(onClick = { onDeleteClick(goal) }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete goal",
+                            tint = Color.White
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(60.dp)) {
+                    Canvas(modifier = Modifier.size(60.dp)) {
+                        drawCircle(
+                            color = Color.White.copy(alpha = 0.3f),
+                            radius = size.minDimension / 2,
+                            style = Stroke(width = 8.dp.toPx())
+                        )
+                        drawArc(
+                            color = Color.White,
+                            startAngle = -90f,
+                            sweepAngle = 360 * animatedProgress,
+                            useCenter = false,
+                            style = Stroke(width = 8.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                    }
+                    Text(
+                        text = "${(animatedProgress * 100).toInt()}%",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddEditGoalDialog(
-    initialGoal: Goal?,
-    onDismiss: () -> Unit,
-    onSave: (String, String, String, Float, Float) -> Unit
+fun AddGoalDialog(
+    onConfirm: (Goal) -> Unit,
+    onCancel: () -> Unit,
+    currentUserId: Long
 ) {
-    var name by remember { mutableStateOf(initialGoal?.name ?: "") }
-    var type by remember { mutableStateOf(initialGoal?.type ?: "") }
-    var desc by remember { mutableStateOf(initialGoal?.description ?: "") }
-    var current by remember { mutableStateOf(initialGoal?.currentValue?.toString() ?: "0") }
-    var target by remember { mutableStateOf(initialGoal?.targetValue?.toString() ?: "0") }
+    var name by remember { mutableStateOf("") }
+    var type by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var targetValue by remember { mutableStateOf("") }
+    var currentValue by remember { mutableStateOf("0") }
+    var unit by remember { mutableStateOf("") }
+    var formError by remember { mutableStateOf<String?>(null) }
+
+    val isFormValid = name.isNotBlank() &&
+            description.isNotBlank() &&
+            targetValue.toFloatOrNull() != null &&
+            currentValue.toFloatOrNull() != null &&
+            unit.isNotBlank()
+
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (initialGoal == null) "Add Goal" else "Edit Goal") },
+        onDismissRequest = onCancel,
+        title = { Text("Add New Goal") },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                formError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Goal Name") },
-                    singleLine = true
+                    label = { Text("Goal Name*") },
+                    isError = name.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
                     value = type,
                     onValueChange = { type = it },
                     label = { Text("Goal Type") },
-                    singleLine = true
+                    modifier = Modifier.fillMaxWidth()
                 )
+
                 OutlinedTextField(
-                    value = desc,
-                    onValueChange = { desc = it },
-                    label = { Text("Description") },
-                    singleLine = false
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description*") },
+                    isError = description.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = currentValue,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) currentValue = it
+                        },
+                        label = { Text("Current*") },
+                        isError = currentValue.toFloatOrNull() == null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = targetValue,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) targetValue = it
+                        },
+                        label = { Text("Target*") },
+                        isError = targetValue.toFloatOrNull() == null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 OutlinedTextField(
-                    value = current,
-                    onValueChange = { current = it.filter { c -> c.isDigit() || c == '.' } },
-                    label = { Text("Current Value") },
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = target,
-                    onValueChange = { target = it.filter { c -> c.isDigit() || c == '.' } },
-                    label = { Text("Target Value") },
-                    singleLine = true
+                    value = unit,
+                    onValueChange = { unit = it },
+                    label = { Text("Unit*") },
+                    isError = unit.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
-                    onSave(
-                        name,
-                        type,
-                        desc,
-                        current.toFloatOrNull() ?: 0f,
-                        target.toFloatOrNull() ?: 0f
-                    )
+                    if (isFormValid) {
+                        onConfirm(
+                            Goal(
+                                name = name,
+                                type = type,
+                                description = description,
+                                targetValue = targetValue.toFloat(),
+                                currentValue = currentValue.toFloat(),
+                                unit = unit,
+                                userId = currentUserId
+                            )
+                        )
+                    } else {
+                        formError = "Please fill all required fields (*)"
+                    }
                 },
-                enabled = name.isNotBlank() && type.isNotBlank() && target.toFloatOrNull() != null
+                enabled = isFormValid
             ) {
-                Text("Save")
+                Text("Add Goal")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onCancel) {
+                Text("Cancel")
+            }
         }
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditGoalDialog(
+    goal: Goal,
+    onConfirm: (Goal) -> Unit,
+    onCancel: () -> Unit
+) {
+    var name by remember { mutableStateOf(goal.name) }
+    var type by remember { mutableStateOf(goal.type) }
+    var description by remember { mutableStateOf(goal.description) }
+    var targetValue by remember { mutableStateOf(goal.targetValue.toString()) }
+    var currentValue by remember { mutableStateOf(goal.currentValue.toString()) }
+    var unit by remember { mutableStateOf(goal.unit) }
+    var formError by remember { mutableStateOf<String?>(null) }
 
+    val isFormValid = name.isNotBlank() &&
+            description.isNotBlank() &&
+            targetValue.toFloatOrNull() != null &&
+            currentValue.toFloatOrNull() != null &&
+            unit.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text("Edit Goal") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                formError?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Goal Name*") },
+                    isError = name.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = type,
+                    onValueChange = { type = it },
+                    label = { Text("Goal Type") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Description*") },
+                    isError = description.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = currentValue,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) currentValue = it
+                        },
+                        label = { Text("Current*") },
+                        isError = currentValue.toFloatOrNull() == null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    OutlinedTextField(
+                        value = targetValue,
+                        onValueChange = {
+                            if (it.matches(Regex("^\\d*\\.?\\d*\$"))) targetValue = it
+                        },
+                        label = { Text("Target*") },
+                        isError = targetValue.toFloatOrNull() == null,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = unit,
+                    onValueChange = { unit = it },
+                    label = { Text("Unit*") },
+                    isError = unit.isBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (isFormValid) {
+                        onConfirm(
+                            goal.copy(
+                                name = name,
+                                type = type,
+                                description = description,
+                                targetValue = targetValue.toFloat(),
+                                currentValue = currentValue.toFloat(),
+                                unit = unit
+                            )
+                        )
+                    } else {
+                        formError = "Please fill all required fields (*)"
+                    }
+                },
+                enabled = isFormValid
+            ) {
+                Text("Save Changes")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancel) {
+                Text("Cancel")
+            }
+        }
+    )
+}

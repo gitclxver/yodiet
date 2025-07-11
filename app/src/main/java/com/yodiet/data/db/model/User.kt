@@ -9,6 +9,9 @@ data class User(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
+    @ColumnInfo(name = "user_name")
+    val userName: String,
+
     @ColumnInfo(name = "first_name")
     val firstName: String,
 
@@ -18,6 +21,9 @@ data class User(
     @ColumnInfo(name = "email")
     val email: String,
 
-    @ColumnInfo(name = "created_at")
-    val createdAt: Long = System.currentTimeMillis()
+    @ColumnInfo(name = "password")
+    val password: String,
+
+    @ColumnInfo(name = "is_current", defaultValue = "0")
+    val isCurrent: Boolean = false
 )

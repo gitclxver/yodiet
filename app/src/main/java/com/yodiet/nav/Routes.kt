@@ -7,7 +7,7 @@ object Routes {
     const val HomeScreen = "home"
 
     const val HealthScreen = "health"
-    const val GoalsScreeen = "goals"
+    const val GoalsScreen = "goals"
 
     const val DietScreen = "diet"
     const val ProfileScreen = "profile"

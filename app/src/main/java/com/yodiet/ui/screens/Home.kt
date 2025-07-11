@@ -1,177 +1,197 @@
 package com.yodiet.ui.screens
 
-import android.R
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.composed
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.yodiet.ui.components.TopNav
+import com.yodiet.ui.vmodels.GoalViewModel
+import com.yodiet.ui.vmodels.HealthVM
+import com.yodiet.ui.vmodels.MealViewModel
+import com.yodiet.nav.Routes
 
 @Composable
 fun HomeScreen(
-    navController: NavController
+    navController: NavController,
+    healthVM: HealthVM = hiltViewModel(),
+    mealVM: MealViewModel = hiltViewModel(),
+    goalVM: GoalViewModel = hiltViewModel()
 ) {
-    Column(
+    val healthData by healthVM.healthData.collectAsStateWithLifecycle(initialValue = com.yodiet.ui.vmodels.HealthUiState())
+    val meals by mealVM.allMeals.collectAsStateWithLifecycle(initialValue = emptyList())
+    val goals by goalVM.allGoals.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-
-        TopNav(navController = navController)
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Home",
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            color = Color.Black,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(vertical = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        HomeCard(
-            title = "Weight",
-            value = "80",
-            details = "KG    25%    23.9\n      Fat      BMI",
-            progress = 0.3f
-        )
-        HomeCard(
-            title = "Nutrition",
-            value = "1200",
-            details = "600g   6000\nkcal    Carb    Water",
-            progress = 0.65f
-        )
-        HomeCard(
-            title = "Fitness",
-            value = "800",
-            details = "8.5\nkcal    KM",
-            progress = 0.8f
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Chart Placeholder
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .padding(horizontal = 24.dp)
-                .background(Color(0xFF1976D2), shape = RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Chart goes here", color = Color.White)
+        item {
+            TopNav(navController = navController)
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        item {
+            SectionCard(
+                title = "Health Goals",
+                emptyText = "No health goals yet",
+                onAddClick = { navController.navigate(Routes.GoalsScreen) },
+                onCardClick = { navController.navigate(Routes.GoalsScreen) } // Added click handler
+            ) {
+                if (healthData.dailyGoals.isEmpty()) {
+                    Text("No goals added", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        healthData.dailyGoals.forEach { goal ->
+                            HealthGoalCard(
+                                goal = goal,
+                                onProgressUpdate = { newValue ->
+                                    healthVM.updateGoalProgress(goal.id, newValue)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            SectionCard(
+                title = "Meals",
+                emptyText = "No meals logged",
+                onAddClick = { navController.navigate(Routes.DietScreen) },
+                onCardClick = { navController.navigate(Routes.DietScreen) } // Added click handler
+            ) {
+                if (meals.isEmpty()) {
+                    Text("No meals today", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    Column {
+                        meals.take(2).forEach { meal ->
+                            Text("- ${meal.title}: ${meal.kcal} kcal",
+                                color = MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            SectionCard(
+                title = "Goals",
+                emptyText = "No goals yet",
+                onAddClick = { navController.navigate(Routes.GoalsScreen) },
+                onCardClick = { navController.navigate(Routes.GoalsScreen) } // Added click handler
+            ) {
+                if (goals.isEmpty()) {
+                    Text(
+                        text = "No goals set yet",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        goals.take(2).forEach { goal ->
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface
+                                ),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = goal.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    if (goal.description.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = goal.description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun HomeCard(title: String, value: String, details: String, progress: Float) {
+fun SectionCard(
+    title: String,
+    emptyText: String,
+    onAddClick: () -> Unit,
+    onCardClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 24.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onCardClick() }, // Make entire card clickable
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1976D2))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .height(80.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = title,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = value,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = details,
-                    color = Color.White,
-                    fontSize = 12.sp
-                )
+                IconButton(
+                    onClick = {
+                        onAddClick()
+                    },
+                    modifier = Modifier.noRippleClickable { onAddClick() }
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add", tint = MaterialTheme.colorScheme.primary)
+                }
             }
-            Box(contentAlignment = Alignment.Center) {
 
-                CircularProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.size(48.dp),
-                    strokeWidth = 6.dp,
-                    color = Color.White
-                )
-                Text(
-                    text = "${(progress * 100).toInt()}%",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            content()
         }
     }
 }
 
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-fun ProfileScreen(onBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Profile") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.AccountCircle, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Profile Screen Content")
-        }
-    }
+fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
+    clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = onClick
+    )
 }

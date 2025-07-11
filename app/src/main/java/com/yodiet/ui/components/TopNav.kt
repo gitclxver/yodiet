@@ -46,7 +46,6 @@ fun TopNav(navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Profile Button
                 IconButton(onClick = { navController.navigate(Routes.ProfileScreen) }) {
                     Icon(
                         Icons.Default.AccountCircle,
@@ -56,7 +55,6 @@ fun TopNav(navController: NavController) {
                     )
                 }
 
-                // App Logo - Image
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "App Logo",
@@ -66,7 +64,6 @@ fun TopNav(navController: NavController) {
                     contentScale = ContentScale.Fit
                 )
 
-                // Dropdown Menu
                 Box {
                     IconButton(onClick = { showDropdown = true }) {
                         Icon(
@@ -89,10 +86,25 @@ fun TopNav(navController: NavController) {
                             }
                         )
                         DropdownMenuItem(
+                            text = { Text("Diet") },
+                            onClick = {
+                                showDropdown = false
+                                navController.navigate(Routes.DietScreen)
+                            }
+                        )
+
+                        DropdownMenuItem(
                             text = { Text("Health") },
                             onClick = {
                                 showDropdown = false
                                 navController.navigate(Routes.HealthScreen)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Goals") },
+                            onClick = {
+                                showDropdown = false
+                                navController.navigate(Routes.GoalsScreen)
                             }
                         )
                         DropdownMenuItem(

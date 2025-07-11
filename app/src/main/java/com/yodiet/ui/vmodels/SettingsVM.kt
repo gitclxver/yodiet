@@ -21,6 +21,9 @@ class SettingsViewModel @Inject constructor(
     private val _uiEvents = Channel<UiEvent>()
     val uiEvents = _uiEvents.receiveAsFlow()
 
+    private val currentUser = userDao.getCurrentUserFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+
     fun getCurrentTheme(): Int {
         val prefs = context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
         return prefs.getInt(ThemeManager.PREF_THEME, ThemeManager.THEME_SYSTEM)
@@ -29,22 +32,31 @@ class SettingsViewModel @Inject constructor(
     fun setTheme(theme: Int) {
         viewModelScope.launch {
             ThemeManager.setTheme(context, theme)
+            _uiEvents.send(UiEvent.ThemeChanged)
         }
     }
 
     fun signOut() {
         viewModelScope.launch {
-            userDao.deleteAllUsers() // Clear Room database
-            _uiEvents.send(UiEvent.NavigateToLogin)
-            _uiEvents.send(UiEvent.ShowToast("Signed out successfully"))
+            currentUser.value?.let { user ->
+                userDao.clearCurrentUser()
+                _uiEvents.send(UiEvent.NavigateToLogin)
+                _uiEvents.send(UiEvent.ShowToast("Signed out successfully"))
+            } ?: run {
+                _uiEvents.send(UiEvent.ShowToast("No user logged in"))
+            }
         }
     }
 
     fun deleteAccount() {
         viewModelScope.launch {
-            userDao.deleteAllUsers() // Clear Room database
-            _uiEvents.send(UiEvent.NavigateToLogin)
-            _uiEvents.send(UiEvent.ShowToast("Account deleted"))
+            currentUser.value?.let { user ->
+                userDao.delete(user)
+                _uiEvents.send(UiEvent.NavigateToLogin)
+                _uiEvents.send(UiEvent.ShowToast("Account deleted"))
+            } ?: run {
+                _uiEvents.send(UiEvent.ShowToast("No user logged in"))
+            }
         }
     }
 

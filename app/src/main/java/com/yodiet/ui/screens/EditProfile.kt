@@ -1,27 +1,28 @@
 package com.yodiet.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.yodiet.ui.components.EditProfileTopNav
-import com.yodiet.ui.components.TopNav
 import com.yodiet.ui.vmodels.ProfileVM
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     navController: NavController,
-    profileViewModel: ProfileVM
+    profileViewModel: ProfileVM = hiltViewModel(),
 ) {
-    val currentUser by profileViewModel.currentUser.collectAsState()
-    val showErrorDialog = remember { mutableStateOf(false) }
+    val currentUser = profileViewModel.currentUser.value
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -44,6 +45,23 @@ fun EditProfileScreen(
                     CircularProgressIndicator()
                 }
             } else {
+                // Username field
+                OutlinedTextField(
+                    value = profileViewModel.editableUsername.value,
+                    onValueChange = { profileViewModel.editableUsername.value = it },
+                    label = { Text("Username*") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = !profileViewModel.isUsernameValid.value,
+                    supportingText = {
+                        if (!profileViewModel.isUsernameValid.value) {
+                            Text(
+                                "Minimum 4 characters, no spaces",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                )
+
                 OutlinedTextField(
                     value = profileViewModel.editableFirstName.value,
                     onValueChange = { profileViewModel.editableFirstName.value = it },
@@ -52,7 +70,10 @@ fun EditProfileScreen(
                     isError = !profileViewModel.isFirstNameValid.value,
                     supportingText = {
                         if (!profileViewModel.isFirstNameValid.value) {
-                            Text("First name cannot be empty")
+                            Text(
+                                "Minimum 2 characters",
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 )
@@ -61,14 +82,9 @@ fun EditProfileScreen(
                     value = profileViewModel.editableLastName.value,
                     onValueChange = { profileViewModel.editableLastName.value = it },
                     label = { Text("Last Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    isError = !profileViewModel.isLastNameValid.value,
-                    supportingText = {
-                        if (!profileViewModel.isLastNameValid.value) {
-                            Text("Last name cannot be empty")
-                        }
-                    }
+                    modifier = Modifier.fillMaxWidth()
                 )
+
 
                 OutlinedTextField(
                     value = profileViewModel.editableEmail.value,
@@ -78,35 +94,58 @@ fun EditProfileScreen(
                     isError = !profileViewModel.isEmailValid.value,
                     supportingText = {
                         if (!profileViewModel.isEmailValid.value) {
-                            Text("Please enter a valid email")
+                            Text(
+                                "Valid email required",
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 )
 
+
                 Button(
                     onClick = {
-                        if (profileViewModel.updateUserProfile()) {
-                            navController.popBackStack()
-                        } else {
-                            showErrorDialog.value = true
+                        isLoading = true
+                        coroutineScope.launch {
+                            when (val result = profileViewModel.updateUserProfile()) {
+                                is ProfileVM.ProfileResult.Success -> {
+                                    navController.popBackStack()
+                                }
+                                is ProfileVM.ProfileResult.Error -> {
+                                    errorMessage = result.message
+                                    showErrorDialog = true
+                                }
+                            }
+                            isLoading = false
                         }
                     },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    enabled = !isLoading
                 ) {
-                    Text("Save Changes")
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text("Save Changes")
+                    }
                 }
             }
         }
     }
 
-    if (showErrorDialog.value) {
+    if (showErrorDialog) {
         AlertDialog(
-            onDismissRequest = { showErrorDialog.value = false },
-            title = { Text("Validation Error") },
-            text = { Text("Please check all fields and try again") },
+            onDismissRequest = { showErrorDialog = false },
+            title = { Text("Error") },
+            text = { Text(errorMessage) },
             confirmButton = {
                 Button(
-                    onClick = { showErrorDialog.value = false }
+                    onClick = { showErrorDialog = false }
                 ) {
                     Text("OK")
                 }
