@@ -1,9 +1,13 @@
 package com.yodiet.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.MoreVert
@@ -23,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.yodiet.R
 import com.yodiet.nav.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,21 +47,23 @@ fun TopNav(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Profile Button
-                IconButton(onClick = { navController.navigate(Routes.Profile) }) {
+                IconButton(onClick = { navController.navigate(Routes.ProfileScreen) }) {
                     Icon(
                         Icons.Default.AccountCircle,
                         contentDescription = "Profile",
-                        tint = MaterialTheme.colorScheme.onPrimary
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
-                // App Logo/Title
-                Text(
-                    text = "HealthApp",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    textAlign = TextAlign.Center
+                // App Logo - Image
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "App Logo",
+                    modifier = Modifier
+                        .height(50.dp)
+                        .padding(horizontal = 10.dp),
+                    contentScale = ContentScale.Fit
                 )
 
                 // Dropdown Menu
@@ -64,7 +72,8 @@ fun TopNav(navController: NavController) {
                         Icon(
                             Icons.Default.MoreVert,
                             contentDescription = "Menu",
-                            tint = MaterialTheme.colorScheme.onPrimary
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
@@ -76,28 +85,21 @@ fun TopNav(navController: NavController) {
                             text = { Text("Home") },
                             onClick = {
                                 showDropdown = false
-                                navController.navigate(Routes.Home)
+                                navController.navigate(Routes.HomeScreen)
                             }
                         )
-//                        DropdownMenuItem(
-//                            text = { Text("Goals") },
-//                            onClick = {
-//                                showDropdown = false
-//                                navController.navigate(Routes.Goals)
-//                            }
-//                        )
-//                        DropdownMenuItem(
-//                            text = { Text("Diet") },
-//                            onClick = {
-//                                showDropdown = false
-//                                navController.navigate(Routes.Diet)
-//                            }
-//                        )
                         DropdownMenuItem(
                             text = { Text("Health") },
                             onClick = {
                                 showDropdown = false
-                                navController.navigate(Routes.Health)
+                                navController.navigate(Routes.HealthScreen)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Settings") },
+                            onClick = {
+                                showDropdown = false
+                                navController.navigate(Routes.SettingsScreen)
                             }
                         )
                     }

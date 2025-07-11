@@ -77,6 +77,12 @@ dependencies {
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+
+    // For SystemUiController
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    // For dynamic colors
+    implementation("androidx.compose.material3:material3:1.1.1")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -113,7 +113,7 @@ fun HealthScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
                                     FloatingActionButton(
                                         onClick = {
-                                            navController.navigate(Routes.Goals)
+                                            navController.navigate(Routes.GoalsScreeen)
                                         },
                                         shape = CircleShape,
                                         containerColor = MaterialTheme.colorScheme.primary

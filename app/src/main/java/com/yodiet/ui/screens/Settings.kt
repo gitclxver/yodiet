@@ -38,8 +38,8 @@ fun SettingsScreen(
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
                 is SettingsViewModel.UiEvent.NavigateToLogin -> {
-                    navController.navigate(Routes.Login) {
-                        popUpTo(Routes.Profile) { inclusive = true }
+                    navController.navigate(Routes.LoginScreen) {
+                        popUpTo(Routes.ProfileScreen) { inclusive = true }
                     }
                 }
                 SettingsViewModel.UiEvent.ThemeChanged -> {

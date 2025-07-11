@@ -12,7 +12,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Lives for the entire app lifecycle
+@InstallIn(SingletonComponent::class)
 object DBModule {
 
     @Provides

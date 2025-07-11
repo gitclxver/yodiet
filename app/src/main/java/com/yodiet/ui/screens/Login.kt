@@ -20,13 +20,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import androidx.navigation.NavController
+import com.yodiet.nav.Routes
 
 @Composable
-fun LoginScreen(onLoginClick: () -> Unit, onSignUpClick: () -> Unit, onForgotPasswordClick: () -> Unit) {
+fun LoginScreen(
+    navController: NavController
+) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
@@ -83,20 +86,25 @@ fun LoginScreen(onLoginClick: () -> Unit, onSignUpClick: () -> Unit, onForgotPas
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = "Forgot Password?",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable { onForgotPasswordClick() }
-            )
+//            Text(
+//                text = "Forgot Password?",
+//                color = MaterialTheme.colorScheme.primary,
+//                modifier = Modifier.clickable { onForgotPasswordClick() }
+//            )
         }
 
         Button(
-            onClick = onLoginClick,
+            onClick = {
+                // Handle login logic here
+                navController.navigate(Routes.HomeScreen) {
+                    popUpTo(Routes.LoginScreen) { inclusive = true }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp)
         ) {
-            Text("Log In", style = MaterialTheme.typography.labelLarge)
+            Text("Log In")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -106,12 +114,13 @@ fun LoginScreen(onLoginClick: () -> Unit, onSignUpClick: () -> Unit, onForgotPas
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Don't have an account > ")
+
             Text(
-                text = "Sign Up",
+                text = "Don't have an account? Sign Up",
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { onSignUpClick() }
+                modifier = Modifier.clickable {
+                    navController.navigate(Routes.SignUpScreen)
+                }
             )
         }
     }

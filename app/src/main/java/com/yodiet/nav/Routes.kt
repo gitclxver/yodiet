@@ -1,18 +1,18 @@
 package com.yodiet.nav
 
 object Routes {
-    const val Login = "login"
+    const val LoginScreen = "login"
 
-    const val SignUp = "sign_up"
-    const val Home = "home"
+    const val SignUpScreen = "sign_up"
+    const val HomeScreen = "home"
 
-    const val Health = "health"
-    const val Goals = "goals"
+    const val HealthScreen = "health"
+    const val GoalsScreeen = "goals"
 
-    const val Diet = "diet"
-    const val Profile = "profile"
+    const val DietScreen = "diet"
+    const val ProfileScreen = "profile"
 
     const val EditProfile = "edit_profile"
 
-    const val Settings = "settings"
+    const val SettingsScreen = "settings"
 }

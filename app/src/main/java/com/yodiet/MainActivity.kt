@@ -9,17 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.yodiet.nav.Routes
-import com.yodiet.ui.screens.EditProfileScreen
-import com.yodiet.ui.screens.HealthScreen
-import com.yodiet.ui.screens.HomeScreen
-import com.yodiet.ui.screens.SettingsScreen
-import com.yodiet.ui.theme.ThemeManager
+import com.yodiet.ui.screens.*
 import com.yodiet.ui.theme.YoDietTheme
 import com.yodiet.ui.vmodels.ProfileVM
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,50 +29,60 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            YoDietTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    YoDietApp()
-                }
-            }
+            YoDietApp()
         }
     }
 }
 
 @Composable
 fun YoDietApp() {
-    val darkTheme = ThemeManager.getCurrentTheme()
+    YoDietTheme {
+        val systemUiController = rememberSystemUiController()
+        val colorScheme = MaterialTheme.colorScheme
+        val navController = rememberNavController()
+        val profileVM: ProfileVM = hiltViewModel()
 
-    val navController = rememberNavController()
+        val isDarkTheme = colorScheme.surface.luminance() < 0.5f
 
-    val profileVM: ProfileVM = hiltViewModel()
-
-    YoDietTheme(darkTheme = darkTheme) {
-        NavHost(
-            navController = navController,
-            startDestination = Routes.Home
-        ) {
-            composable(Routes.Home) {
-                HomeScreen(navController = navController)
-            }
-            composable(Routes.Health) {
-                HealthScreen(navController = navController)
-            }
-            composable(Routes.Profile) {
-                ProfileScreen(navController = navController)
-            }
-            composable(Routes.EditProfile) {
-                EditProfileScreen(
-                    navController = navController,
-                    profileViewModel = profileVM
+        SideEffect {
+            systemUiController.apply {
+                setStatusBarColor(
+                    color = colorScheme.surface,
+                    darkIcons = !isDarkTheme
+                )
+                setNavigationBarColor(
+                    color = colorScheme.surface,
+                    darkIcons = !isDarkTheme
                 )
             }
-            composable(Routes.Settings) {
-                SettingsScreen(navController = navController)
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = colorScheme.background
+        ) {
+            NavHost(
+                navController = navController,
+                startDestination = Routes.LoginScreen
+            ) {
+                composable(Routes.LoginScreen) {
+                    LoginScreen(
+                        navController = navController
+                    )
+                }
+                composable(Routes.SignUpScreen) {
+                    SignUpScreen(
+                        navController = navController
+                    )
+                }
+                composable(Routes.HomeScreen) { HomeScreen(navController) }
+                composable(Routes.HealthScreen) { HealthScreen(navController) }
+                composable(Routes.ProfileScreen) { ProfileScreen(navController) }
+                composable(Routes.GoalsScreeen) {ProfileScreen(navController)}
+                composable(Routes.DietScreen) {DietScreen(navController)}
+                composable(Routes.EditProfile) { EditProfileScreen(navController, profileVM) }
+                composable(Routes.SettingsScreen) { SettingsScreen(navController) }
             }
-            // Add other routes as needed
         }
     }
 }

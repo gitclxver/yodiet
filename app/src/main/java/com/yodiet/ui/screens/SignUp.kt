@@ -22,9 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import androidx.navigation.NavController
 
 @Composable
-fun SignUpScreen(onSignUpClick: () -> Unit, onLoginClick: () -> Unit) {
+fun SignUpScreen(
+    navController: NavController,
+) {
     var emailOrPhone by remember { mutableStateOf("") }
     var fullName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -37,7 +40,7 @@ fun SignUpScreen(onSignUpClick: () -> Unit, onLoginClick: () -> Unit) {
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    )  {
         Text(
             text = "Hi! Welcome",
             style = MaterialTheme.typography.headlineMedium,
@@ -112,12 +115,21 @@ fun SignUpScreen(onSignUpClick: () -> Unit, onLoginClick: () -> Unit) {
         )
 
         Button(
-            onClick = onSignUpClick,
+            onClick = {
+                // TODO: Add your sign up logic here
+                // After successful sign up:
+                navController.popBackStack() // Returns to login screen
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(48.dp),
+            enabled = emailOrPhone.isNotBlank() &&
+                    fullName.isNotBlank() &&
+                    username.isNotBlank() &&
+                    password.isNotBlank() &&
+                    confirmPassword.isNotBlank()
         ) {
-            Text("sign up", style = MaterialTheme.typography.labelLarge)
+            Text("Sign Up", style = MaterialTheme.typography.labelLarge)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +137,9 @@ fun SignUpScreen(onSignUpClick: () -> Unit, onLoginClick: () -> Unit) {
         Text(
             text = "Have an account? Login",
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable { onLoginClick() }
+            modifier = Modifier.clickable {
+                navController.popBackStack() // Navigates back to login screen
+            }
         )
     }
 }

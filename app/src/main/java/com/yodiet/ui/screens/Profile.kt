@@ -58,7 +58,7 @@ fun ProfileScreen(
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
-                    IconButton(onClick = { navController.navigate(Routes.Settings) }) {
+                    IconButton(onClick = { navController.navigate(Routes.SettingsScreen) }) {
                         Icon(
                             Icons.Filled.Settings,
                             contentDescription = "Settings",
@@ -171,8 +171,8 @@ fun ProfileScreen(
                     onClick = {
                         // Handle logout logic
                         showLogoutDialog = false
-                        navController.navigate(Routes.Login) {
-                            popUpTo(Routes.Profile) { inclusive = true }
+                        navController.navigate(Routes.LoginScreen) {
+                            popUpTo(Routes.ProfileScreen) { inclusive = true }
                         }
                     }
                 ) {
